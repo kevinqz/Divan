@@ -1,4 +1,6 @@
 <script>
+  import { Router, Route, navigate } from "svelte-routing";
+
   import logo from "./assets/svelte.png";
   import Counter from "./lib/Counter.svelte";
   import Webcam from "./lib/Webcam.svelte";
@@ -9,11 +11,14 @@
   import MenuBar from "./lib/MenuBar.svelte";
   import { onMount } from "svelte";
 
+  import VideoPage from "./lib/VideoPage.svelte";
+
   let showWebcam = true;
   let showVideoList = true;
 
   function toggleWebcam() {
     showWebcam = !showWebcam;
+    navigate(`/`);
   }
 
   function toggleVideoList() {
@@ -26,17 +31,29 @@
 </script>
 
 <main>
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="worker-src 'self' blob:"
+  />
+
   <!-- <WebcamRecorder /> -->
   <!-- <Webcam /> -->
   <MenuBar {toggleWebcam} {toggleVideoList} />
 
-  {#if showWebcam}
+  <!-- {#if showWebcam}
     <WebcamDois />
-  {/if}
+  {/if} -->
 
   {#if showVideoList}
     <VideoList />
   {/if}
+
+  <Router>
+    <Route path="/" component={WebcamDois} />
+    <Route path="/video/:id" let:params>
+      <VideoPage id={params.id} />
+    </Route>
+  </Router>
 </main>
 
 <style>

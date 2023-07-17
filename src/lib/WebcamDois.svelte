@@ -56,7 +56,7 @@
       }, 1000);
 
       document.getElementById("RecordingBadge").textContent = "00:00:00";
-      document.getElementById("RecordingBadge").style.display = "block";
+      document.getElementById("RecordingBadge").style.display = "inline-block";
       videoRef = document.getElementById("videoElement");
       videoRef.srcObject = stream;
 
@@ -117,11 +117,12 @@
     let video = {
       timestamp: timestamp,
       blob: blob,
+      duration: recordTime, // Add this line to store the duration in seconds
     };
     recordedVideos.set([...$recordedVideos, video]); // Push the new video to the store
     saveVideo(video);
 
-    downloadVideo(blob, `test_${timestamp}.webm`);
+    // downloadVideo(blob, `ConciRoom_${timestamp}.webm`);
   }
 
   function updateBadge(recordTime) {
@@ -160,7 +161,7 @@
   }
 </script>
 
-<section class="container mx-auto px-4">
+<section class="container mx-auto px-4 mt-28">
   <h1 class="text-4xl text-zync-700 font-bold my-4">Conci Room</h1>
   <button
     id="startButton"
@@ -173,8 +174,10 @@
     on:click={stopStream}
     style="display: none;">Stop Stream</button
   >
-  <Badge id="RecordingBadge" variant="outline" style="display: none;"
-    >00:00:00</Badge
+  <Badge
+    id="RecordingBadge"
+    variant="destructive"
+    style="display: none; bg-red-600 text-white px-4 py-2">00:00:00</Badge
   >
   <button
     id="startAnotherButton"
