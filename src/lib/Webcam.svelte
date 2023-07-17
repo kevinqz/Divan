@@ -4,6 +4,48 @@
   let mediaRecorder;
   let recordedChunks = [];
   let recordedVideos = [];
+  let db;
+
+  // Open a database
+  let openRequest = indexedDB.open("videoDatabase", 1);
+
+  openRequest.onupgradeneeded = function () {
+    // The database did not previously exist, so create object stores and indexes.
+    db = openRequest.result;
+    let store = db.createObjectStore("videos", { keyPath: "timestamp" });
+    let timestampIndex = store.createIndex("timestamp", "timestamp");
+  };
+
+  openRequest.onsuccess = function () {
+    db = openRequest.result;
+    loadVideos();
+  };
+
+  openRequest.onerror = function () {
+    console.error("Error", openRequest.error);
+  };
+
+  function saveVideo(video) {
+    let tx = db.transaction("videos", "readwrite");
+    let store = tx.objectStore("videos");
+    let request = store.put(video);
+    request.onsuccess = function () {
+      console.log("Video saved successfully");
+    };
+    request.onerror = function () {
+      console.error("Error", request.error);
+    };
+  }
+
+  function loadVideos() {
+    let tx = db.transaction("videos", "readonly");
+    let store = tx.objectStore("videos");
+    let request = store.getAll();
+    request.onsuccess = function () {
+      recordedVideos = request.result;
+      updateVideoList();
+    };
+  }
 
   async function getStream() {
     try {
@@ -41,8 +83,6 @@
     // Stop all tracks on the media stream
     stream.getTracks().forEach((track) => track.stop());
     videoRef.srcObject = null;
-    // Don't set mediaRecorder to null
-    // mediaRecorder = null;
 
     let blob = new Blob(recordedChunks, {
       type: "video/webm",
@@ -54,7 +94,6 @@
     // Create blobURL right before setting the source of video element
     let blobURL = URL.createObjectURL(blob);
     videoRef.src = blobURL;
-    // URL.revokeObjectURL(blobURL); // Revoke blobURL immediately after setting the source of video element
 
     recordedChunks = [];
 
@@ -70,9 +109,10 @@
     let timestamp = new Date().toISOString();
     let video = {
       timestamp: timestamp,
-      blob: blob, // Store blob instead of blobURL
+      blob: blob,
     };
     recordedVideos.push(video);
+    saveVideo(video);
 
     // Update video list
     updateVideoList();
