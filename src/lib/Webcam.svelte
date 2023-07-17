@@ -1,10 +1,14 @@
 <script lang="ts">
+  import { Badge } from "./components/ui/badge";
+
   let stream;
   let videoRef;
   let mediaRecorder;
   let recordedChunks = [];
   let recordedVideos = [];
   let db;
+  let recordStartTime; // New variable to track record start time
+  let recordTimer; // New variable for timer
 
   // Open a database
   let openRequest = indexedDB.open("videoDatabase", 1);
@@ -56,6 +60,17 @@
         video: true,
         audio: true,
       });
+
+      recordStartTime = new Date(); // Set record start time
+
+      // Start timer to update badge every second
+      recordTimer = setInterval(() => {
+        let recordTime = (new Date() - recordStartTime) / 1000; // Calculate record time in seconds
+        updateBadge(recordTime);
+      }, 1000);
+
+      document.getElementById("RecordingBadge").textContent = "00:00:00"; // Set badge to 00:00:00
+      document.getElementById("RecordingBadge").style.display = "block"; // Show badge
       videoRef = document.getElementById("videoElement");
       videoRef.srcObject = stream;
 
@@ -79,7 +94,28 @@
   }
 
   async function stopStream() {
+    clearInterval(recordTimer); // Stop timer
+    document.getElementById("RecordingBadge").style.display = "none"; // Hide badge
+
     mediaRecorder.stop();
+
+    let recordEndTime = new Date(); // Get record end time
+    let recordTime = (recordEndTime - recordStartTime) / 1000; // Calculate record time in seconds
+
+    // Format record time to hh:mm:ss
+    let hours = Math.floor(recordTime / 3600);
+    let minutes = Math.floor((recordTime - hours * 3600) / 60);
+    let seconds = Math.floor(recordTime - hours * 3600 - minutes * 60);
+    let formattedTime =
+      hours.toString().padStart(2, "0") +
+      ":" +
+      minutes.toString().padStart(2, "0") +
+      ":" +
+      seconds.toString().padStart(2, "0");
+
+    // Update Badge element to display record time
+    document.getElementById("RecordingBadge").textContent = formattedTime;
+
     // Stop all tracks on the media stream
     stream.getTracks().forEach((track) => track.stop());
     videoRef.srcObject = null;
@@ -156,6 +192,22 @@
     });
   }
 
+  function updateBadge(recordTime) {
+    // Format record time to hh:mm:ss
+    let hours = Math.floor(recordTime / 3600);
+    let minutes = Math.floor((recordTime - hours * 3600) / 60);
+    let seconds = Math.floor(recordTime - hours * 3600 - minutes * 60);
+    let formattedTime =
+      hours.toString().padStart(2, "0") +
+      ":" +
+      minutes.toString().padStart(2, "0") +
+      ":" +
+      seconds.toString().padStart(2, "0");
+
+    // Update Badge element to display record time
+    document.getElementById("RecordingBadge").textContent = formattedTime;
+  }
+
   function downloadVideo(blob, filename) {
     let blobURL = URL.createObjectURL(blob);
     let a = document.createElement("a");
@@ -176,6 +228,7 @@
   }
 
   function startAnotherStream() {
+    document.getElementById("RecordingBadge").style.display = "none"; // Hide badge
     // Reset video source
     videoRef.src = "";
     let startButton = document.getElementById("startButton");
@@ -185,7 +238,28 @@
     downloadButton.style.display = "none";
     startAnotherButton.style.display = "none";
   }
+
+  function toggleVideoList() {
+    let videoList = document.getElementById("videoList");
+    if (videoList.style.display === "none") {
+      videoList.style.display = "block";
+    } else {
+      videoList.style.display = "none";
+    }
+  }
 </script>
+
+<div
+  id="menuBar"
+  class="bg-gray-200"
+  style="width: 320px; position: fixed; left: 0; top: 0; padding: 10px;"
+>
+  <button
+    id="toggleButton"
+    class="rounded-sm bg-green-600 text-white px-4 py-2"
+    on:click={toggleVideoList}>Toggle Video List</button
+  >
+</div>
 
 <section class="container mx-auto px-4">
   <h1 class="text-4xl text-zync-700 font-bold my-4">Conci Room</h1>
@@ -199,6 +273,9 @@
     class="rounded-sm bg-red-600 text-white px-4 py-2"
     on:click={stopStream}
     style="display: none;">Stop Stream</button
+  >
+  <Badge id="RecordingBadge" variant="outline" style="display: none;"
+    >00:00:00</Badge
   >
   <button
     id="startAnotherButton"
@@ -225,6 +302,6 @@
   <aside
     id="videoList"
     class="mt-4"
-    style="width: 320px; height: 100vh; position: fixed; left: 0; top: 0; overflow-y: auto;"
+    style="width: 320px; height: calc(100vh - 50px); position: fixed; left: 0; top: 50px; overflow-y: auto;"
   />
 </section>

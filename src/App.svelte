@@ -3,11 +3,40 @@
   import Counter from "./lib/Counter.svelte";
   import Webcam from "./lib/Webcam.svelte";
   import WebcamRecorder from "./lib/WebcamRecorder.svelte";
+
+  import WebcamDois from "./lib/WebcamDois.svelte";
+  import VideoList from "./lib/VideoList.svelte";
+  import MenuBar from "./lib/MenuBar.svelte";
+  import { onMount } from "svelte";
+
+  let showWebcam = true;
+  let showVideoList = true;
+
+  function toggleWebcam() {
+    showWebcam = !showWebcam;
+  }
+
+  function toggleVideoList() {
+    showVideoList = !showVideoList;
+  }
+
+  onMount(() => {
+    toggleVideoList();
+  });
 </script>
 
 <main>
   <!-- <WebcamRecorder /> -->
-  <Webcam />
+  <!-- <Webcam /> -->
+  <MenuBar {toggleWebcam} {toggleVideoList} />
+
+  {#if showWebcam}
+    <WebcamDois />
+  {/if}
+
+  {#if showVideoList}
+    <VideoList />
+  {/if}
 </main>
 
 <style>
