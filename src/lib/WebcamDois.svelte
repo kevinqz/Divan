@@ -1,15 +1,49 @@
 <script lang="ts">
   import { Badge } from "./components/ui/badge";
-  import { recordedVideos } from "./store.js";
+  import { Button } from "./components/ui/button";
+  import { recordedVideos } from "./stores/store.js";
 
   let stream;
   let videoRef;
   let mediaRecorder;
   let recordedChunks = [];
+  let audioMediaRecorder; // Declare a new MediaRecorder for audio
+  let audioRecordedChunks = []; // Declare a new chunks array for audio
   let db;
   let recordStartTime;
   let recordTimer;
 
+window.onload = function() {
+  // Open a transaction to the database
+  let tx = db.transaction("videos", "readonly");
+
+  // Retrieve the object store
+  let store = tx.objectStore("videos");
+
+  // Make a request to get all records from the store
+  let request = store.getAll();
+
+  request.onsuccess = function() {
+    // The result of the request is an array of records
+    let videos = request.result;
+
+    videos.forEach(video => {
+      // Process each video record here
+
+      // You can create new blob URLs for each video and audio blob
+      let blobURL = URL.createObjectURL(video.blob);
+      let audioBlobURL = URL.createObjectURL(video.audioBlob);
+
+      // You can use these blob URLs to set the src of video or audio elements on the page
+    });
+  };
+
+  request.onerror = function() {
+    console.error("Error", request.error);
+  };
+};
+
+  
   // Open a database
   let openRequest = indexedDB.open("videoDatabase", 1);
 
@@ -28,25 +62,38 @@
   };
 
   function saveVideo(video) {
-    let tx = db.transaction("videos", "readwrite");
-    let store = tx.objectStore("videos");
-    let request = store.put(video);
-    request.onsuccess = function () {
-      console.log("Video saved successfully");
-    };
-    request.onerror = function () {
-      console.error("Error", request.error);
-    };
-  }
+  let tx = db.transaction("videos", "readwrite");
+  let store = tx.objectStore("videos");
+  let request = store.put(video);
+  request.onsuccess = function () {
+    console.log("Video saved successfully");
+  };
+  request.onerror = function () {
+    console.error("Error", request.error);
+  };
+}
 
   async function getStream() {
     try {
       recordedChunks = [];
+      audioRecordedChunks = []; // Clear the audio chunks
 
       stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
+
+      // Create a new MediaStream with only audio tracks
+      let audioStream = new MediaStream(stream.getAudioTracks());
+
+      // Initialize the audio MediaRecorder
+      audioMediaRecorder = new MediaRecorder(audioStream);
+      audioMediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioRecordedChunks.push(event.data);
+        }
+      };
+      audioMediaRecorder.start(10);
 
       recordStartTime = new Date();
 
@@ -59,6 +106,7 @@
       document.getElementById("RecordingBadge").style.display = "inline-block";
       videoRef = document.getElementById("videoElement");
       videoRef.srcObject = stream;
+      videoRef.muted = true;  // Mute the video while recording
 
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = (event) => {
@@ -79,6 +127,7 @@
     clearInterval(recordTimer);
     document.getElementById("RecordingBadge").style.display = "none";
     mediaRecorder.stop();
+    audioMediaRecorder.stop(); // Stop the audio MediaRecorder
 
     let recordEndTime = new Date();
     let recordTime = (recordEndTime - recordStartTime) / 1000;
@@ -101,8 +150,17 @@
       type: "video/webm",
     });
 
+    let audioBlob = new Blob(audioRecordedChunks, {
+      type: "audio/ogg; codecs=opus",
+    });
+
+    let audioBlobURL = URL.createObjectURL(audioBlob);
+
+    audioRecordedChunks = []; // Clear the audio chunks
+
     stream.getTracks().forEach((track) => track.stop());
     videoRef.srcObject = null;
+    videoRef.muted = false;  // Unmute the video after recording
 
     let blobURL = URL.createObjectURL(blob);
     videoRef.src = blobURL;
@@ -114,13 +172,15 @@
       "inline-block";
 
     let timestamp = new Date().toISOString();
-    let video = {
-      timestamp: timestamp,
-      blob: blob,
-      duration: recordTime, // Add this line to store the duration in seconds
-    };
-    recordedVideos.set([...$recordedVideos, video]); // Push the new video to the store
-    saveVideo(video);
+     let video = {
+    timestamp: timestamp,
+    blob: blob,
+    audioBlob: audioBlob,
+    duration: recordTime,
+    transcription: "",  // Initialize transcription as an empty string
+  };
+  recordedVideos.set([...$recordedVideos, video]); // Push the new video to the store
+  saveVideo(video);
 
     // downloadVideo(blob, `ConciRoom_${timestamp}.webm`);
   }
@@ -163,27 +223,27 @@
 
 <section class="container mx-auto px-4 mt-28">
   <h1 class="text-4xl text-zync-700 font-bold my-4">Conci Room</h1>
-  <button
+  <Button
     id="startButton"
     class="rounded-sm bg-slate-600 text-white px-4 py-2"
-    on:click={getStream}>Start Stream</button
+    on:click={getStream}>Start Stream</Button
   >
-  <button
+  <Button
     id="stopButton"
     class="rounded-sm bg-red-600 text-white px-4 py-2"
     on:click={stopStream}
-    style="display: none;">Stop Stream</button
+    style="display: none;">Stop Stream</Button
   >
   <Badge
     id="RecordingBadge"
     variant="destructive"
     style="display: none; bg-red-600 text-white px-4 py-2">00:00:00</Badge
   >
-  <button
+  <Button
     id="startAnotherButton"
     class="rounded-sm bg-yellow-600 text-white px-4 py-2"
     on:click={startAnotherStream}
-    style="display: none;">Start Another Stream</button
+    style="display: none;">Start Another Stream</Button
   >
 
   <video

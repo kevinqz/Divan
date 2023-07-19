@@ -2,16 +2,13 @@
   import { Router, Route, navigate } from "svelte-routing";
 
   import logo from "./assets/svelte.png";
-  import Counter from "./lib/Counter.svelte";
-  import Webcam from "./lib/Webcam.svelte";
-  import WebcamRecorder from "./lib/WebcamRecorder.svelte";
 
   import WebcamDois from "./lib/WebcamDois.svelte";
   import VideoList from "./lib/VideoList.svelte";
   import MenuBar from "./lib/MenuBar.svelte";
   import { onMount } from "svelte";
 
-  import VideoPage from "./lib/VideoPage.svelte";
+  import VideoPage from "./routes/video/[id]/VideoPage.svelte";
 
   let showWebcam = true;
   let showVideoList = true;
@@ -51,7 +48,7 @@
   <Router>
     <Route path="/" component={WebcamDois} />
     <Route path="/video/:id" let:params>
-      <VideoPage id={params.id} />
+      <VideoPage id={params.id} key={params.id} />
     </Route>
   </Router>
 </main>
