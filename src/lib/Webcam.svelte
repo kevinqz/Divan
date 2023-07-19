@@ -13,37 +13,36 @@
   let recordStartTime;
   let recordTimer;
 
-window.onload = function() {
-  // Open a transaction to the database
-  let tx = db.transaction("videos", "readonly");
+  window.onload = function () {
+    // Open a transaction to the database
+    let tx = db.transaction("videos", "readonly");
 
-  // Retrieve the object store
-  let store = tx.objectStore("videos");
+    // Retrieve the object store
+    let store = tx.objectStore("videos");
 
-  // Make a request to get all records from the store
-  let request = store.getAll();
+    // Make a request to get all records from the store
+    let request = store.getAll();
 
-  request.onsuccess = function() {
-    // The result of the request is an array of records
-    let videos = request.result;
+    request.onsuccess = function () {
+      // The result of the request is an array of records
+      let videos = request.result;
 
-    videos.forEach(video => {
-      // Process each video record here
+      videos.forEach((video) => {
+        // Process each video record here
 
-      // You can create new blob URLs for each video and audio blob
-      let blobURL = URL.createObjectURL(video.blob);
-      let audioBlobURL = URL.createObjectURL(video.audioBlob);
+        // You can create new blob URLs for each video and audio blob
+        let blobURL = URL.createObjectURL(video.blob);
+        let audioBlobURL = URL.createObjectURL(video.audioBlob);
 
-      // You can use these blob URLs to set the src of video or audio elements on the page
-    });
+        // You can use these blob URLs to set the src of video or audio elements on the page
+      });
+    };
+
+    request.onerror = function () {
+      console.error("Error", request.error);
+    };
   };
 
-  request.onerror = function() {
-    console.error("Error", request.error);
-  };
-};
-
-  
   // Open a database
   let openRequest = indexedDB.open("videoDatabase", 1);
 
@@ -62,16 +61,16 @@ window.onload = function() {
   };
 
   function saveVideo(video) {
-  let tx = db.transaction("videos", "readwrite");
-  let store = tx.objectStore("videos");
-  let request = store.put(video);
-  request.onsuccess = function () {
-    console.log("Video saved successfully");
-  };
-  request.onerror = function () {
-    console.error("Error", request.error);
-  };
-}
+    let tx = db.transaction("videos", "readwrite");
+    let store = tx.objectStore("videos");
+    let request = store.put(video);
+    request.onsuccess = function () {
+      console.log("Video saved successfully");
+    };
+    request.onerror = function () {
+      console.error("Error", request.error);
+    };
+  }
 
   async function getStream() {
     try {
@@ -106,7 +105,7 @@ window.onload = function() {
       document.getElementById("RecordingBadge").style.display = "inline-block";
       videoRef = document.getElementById("videoElement");
       videoRef.srcObject = stream;
-      videoRef.muted = true;  // Mute the video while recording
+      videoRef.muted = true; // Mute the video while recording
 
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = (event) => {
@@ -160,7 +159,7 @@ window.onload = function() {
 
     stream.getTracks().forEach((track) => track.stop());
     videoRef.srcObject = null;
-    videoRef.muted = false;  // Unmute the video after recording
+    videoRef.muted = false; // Unmute the video after recording
 
     let blobURL = URL.createObjectURL(blob);
     videoRef.src = blobURL;
@@ -172,15 +171,15 @@ window.onload = function() {
       "inline-block";
 
     let timestamp = new Date().toISOString();
-     let video = {
-    timestamp: timestamp,
-    blob: blob,
-    audioBlob: audioBlob,
-    duration: recordTime,
-    transcription: "",  // Initialize transcription as an empty string
-  };
-  recordedVideos.set([...$recordedVideos, video]); // Push the new video to the store
-  saveVideo(video);
+    let video = {
+      timestamp: timestamp,
+      blob: blob,
+      audioBlob: audioBlob,
+      duration: recordTime,
+      transcription: "", // Initialize transcription as an empty string
+    };
+    recordedVideos.set([...$recordedVideos, video]); // Push the new video to the store
+    saveVideo(video);
 
     // downloadVideo(blob, `ConciRoom_${timestamp}.webm`);
   }

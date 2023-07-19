@@ -3,8 +3,9 @@
 
   import logo from "./assets/svelte.png";
 
-  import WebcamDois from "./lib/WebcamDois.svelte";
+  import WebcamDois from "./lib/Webcam.svelte";
   import VideoList from "./lib/VideoList.svelte";
+  import Config from "./lib/Config.svelte";
   import MenuBar from "./lib/MenuBar.svelte";
   import { onMount } from "svelte";
 
@@ -33,36 +34,48 @@
     content="worker-src 'self' blob:"
   />
 
-  <!-- <WebcamRecorder /> -->
-  <!-- <Webcam /> -->
-  <MenuBar {toggleWebcam} {toggleVideoList} />
-
-  <!-- {#if showWebcam}
-    <WebcamDois />
-  {/if} -->
-
   {#if showVideoList}
     <VideoList />
   {/if}
 
-  <Router>
-    <Route path="/" component={WebcamDois} />
-    <Route path="/video/:id" let:params>
-      <VideoPage id={params.id} key={params.id} />
-    </Route>
-  </Router>
+  <div id="main-content" class:video-list-open={showVideoList}>
+    <MenuBar {toggleWebcam} {toggleVideoList} />
+
+    <Router>
+      <Route path="/" component={WebcamDois} />
+      <Route path="/config" component={Config} />
+      <Route path="/video/:id" let:params>
+        <VideoPage id={params.id} key={params.id} />
+      </Route>
+    </Router>
+  </div>
 </main>
 
 <style>
   :root {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    --video-list-width: 340px;
   }
 
   main {
+    display: flex;
     text-align: center;
     padding: 1em;
     margin: 0 auto;
+  }
+
+  #videoList {
+    width: var(--video-list-width);
+  }
+
+  #main-content {
+    flex-grow: 1;
+    transition: margin-left 0.3s ease-out;
+  }
+
+  .video-list-open {
+    margin-left: var(--video-list-width);
   }
 
   img {

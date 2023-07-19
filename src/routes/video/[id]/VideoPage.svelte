@@ -1,4 +1,7 @@
 <script>
+
+  import { whisperAPIKey } from "../../../lib/stores/configStore.js";
+
 let db;
 
 let openRequest = indexedDB.open("videoDatabase", 1);
@@ -99,7 +102,7 @@ const handleTranscription = async (event) => {
   
   isLoading = true;
 
-  const WHISPER_API_KEY = "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";
+  let WHISPER_API_KEY = $whisperAPIKey; // from the store
   try {
     transcribedText = await transcribeAudioWithWhisperApi(video.audioBlob, WHISPER_API_KEY);
     video = await updateVideo(reversedId, transcribedText);  // Wait for updateVideo to complete and get the updated video

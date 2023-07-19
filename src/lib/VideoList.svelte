@@ -2,6 +2,8 @@
   import { recordedVideos } from "./stores/store.js";
   import { navigate } from "svelte-routing";
 
+  import { fly } from "svelte/transition";
+
   let videos = [];
 
   function formatTime(time) {
@@ -121,15 +123,16 @@
 
 <aside
   id="videoList"
-  class="mt-4 bg-gray-100 align-center px-4"
+  class="mt-4 bg-surface-300 align-center px-4"
   style="width: 340px; height: calc(100vh - 50px); position: fixed; left: 0; top: 44px; overflow-y: auto; display: block; z-index: 9999;"
+  transition:fly={{ x: -300, duration: 300 }}
 >
   {#each Object.keys(videos) as day (day)}
     <h2 class="m-4">{day}</h2>
     {#each flattenedVideos
       .filter((v) => v.day === day)
       .sort((a, b) => b.id - a.id) as item (item.id)}
-      <div class="bg-gray-200 p-2 my-2 rounded-md position-relative">
+      <div class="bg-tertiary-900 p-2 my-2 rounded-md position-relative">
         <h3 class="mt-1" on:click={() => goToVideoPage(item.id)}>
           Video {item.id + 1}
         </h3>
@@ -141,7 +144,7 @@
           (Duration: {formatTime(item.video.duration)})
         </p>
         <video
-          class="mt-1 rounded-sm"
+          class="mt-1 rounded-sm mb-2"
           src={URL.createObjectURL(item.video.blob)}
           controls
           width="320"

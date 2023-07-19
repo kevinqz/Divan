@@ -8,6 +8,7 @@
     "serve": "vite preview"
   },
   "devDependencies": {
+    "@skeletonlabs/skeleton": "^1.10.0",
     "@sveltejs/vite-plugin-svelte": "^2.4.2",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",
@@ -23,6 +24,7 @@
     "express": "^4.18.2",
     "lucide-svelte": "^0.260.0",
     "radix-svelte": "^0.8.0",
+    "svelte-icons": "^2.1.0",
     "svelte-routing": "^1.11.0",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.6"
