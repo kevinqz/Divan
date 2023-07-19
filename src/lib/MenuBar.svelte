@@ -8,7 +8,7 @@
   import GoDeviceCameraVideo from "svelte-icons/go/GoDeviceCameraVideo.svelte";
   import GoGear from "svelte-icons/go/GoGear.svelte";
 
-  const openConfig = () => navigate("/config");
+  const openSettings = () => navigate("/settings");
 </script>
 
 <div
@@ -23,7 +23,6 @@
       on:click={toggleVideoList}
     >
       <GoArchive class="mr-1 w-2 h-2 inline-block" />
-      <!-- Adjusted icon size -->
       <span
         class="ml-2 hidden md:inline-block whitespace-nowrap text-sm md:text-base"
         >Previous Sessions</span
@@ -36,7 +35,6 @@
       on:click={toggleWebcam}
     >
       <GoDeviceCameraVideo class="mr-1 w-2 h-2 inline-block" />
-      <!-- Adjusted icon size -->
       <span
         class="ml-2 hidden md:inline-block whitespace-nowrap text-sm md:text-base"
         >Record Session</span
@@ -46,16 +44,37 @@
   <div>
     <Button
       variant="outline"
-      id="openConfig"
+      id="openSettings"
       class="flex-shrink-0 menu-button rounded bg-primary-600 text-white px-2 md:px-4 md:py-2"
-      on:click={openConfig}
+      on:click={openSettings}
     >
       <GoGear class="mr-1 w-2 h-2 inline-block" />
-      <!-- Adjusted icon size -->
       <span
         class="ml-2 hidden md:inline-block whitespace-nowrap text-sm md:text-base"
-        >Config</span
+        >Settings</span
       >
     </Button>
   </div>
 </div>
+
+<style>
+  @media (max-width: 600px) {
+    #toggleVideoList span,
+    #toggleWebcam span,
+    #openSettings span {
+      display: none;
+    }
+
+    #toggleVideoList::after {
+      content: "Prev";
+    }
+
+    #toggleWebcam::after {
+      content: "Record";
+    }
+
+    #openSettings::after {
+      content: "Config";
+    }
+  }
+</style>

@@ -3,6 +3,10 @@
   import { Button } from "./components/ui/button";
   import { recordedVideos } from "./stores/store.js";
 
+  import { navigate } from "svelte-routing";
+
+  let lastVideoId = 0; // Add this line to the top of your script
+
   let stream;
   let videoRef;
   let mediaRecorder;
@@ -125,6 +129,8 @@
   async function stopStream() {
     clearInterval(recordTimer);
     document.getElementById("RecordingBadge").style.display = "none";
+    document.getElementById("goToVideoPageButton").style.display =
+      "inline-block";
     mediaRecorder.stop();
     audioMediaRecorder.stop(); // Stop the audio MediaRecorder
 
@@ -169,15 +175,19 @@
     document.getElementById("stopButton").style.display = "none";
     document.getElementById("startAnotherButton").style.display =
       "inline-block";
+    document.getElementById("goToVideoPageButton").style.display =
+      "inline-block"; // Show the "Go To Video Page" button
 
     let timestamp = new Date().toISOString();
     let video = {
+      id: $recordedVideos.length, // Assign the next ID based on the length of the recordedVideos store
       timestamp: timestamp,
       blob: blob,
       audioBlob: audioBlob,
       duration: recordTime,
       transcription: "", // Initialize transcription as an empty string
     };
+    lastVideoId = video.id; // set the lastVideoId to the id of the newly created video
     recordedVideos.set([...$recordedVideos, video]); // Push the new video to the store
     saveVideo(video);
 
@@ -217,19 +227,16 @@
     videoRef.src = "";
     document.getElementById("startButton").style.display = "inline-block";
     document.getElementById("startAnotherButton").style.display = "none";
+    document.getElementById("goToVideoPageButton").style.display = "none";
   }
 </script>
 
 <section class="container mx-auto px-4 mt-28">
   <h1 class="text-4xl text-zync-700 font-bold my-4">Conci Room</h1>
-  <Button
-    id="startButton"
-    class="rounded-sm bg-slate-600 text-white px-4 py-2"
-    on:click={getStream}>Start Stream</Button
-  >
+  <Button id="startButton" on:click={getStream}>Start Stream</Button>
   <Button
     id="stopButton"
-    class="rounded-sm bg-red-600 text-white px-4 py-2"
+    variant="destructive"
     on:click={stopStream}
     style="display: none;">Stop Stream</Button
   >
@@ -240,9 +247,14 @@
   >
   <Button
     id="startAnotherButton"
-    class="rounded-sm bg-yellow-600 text-white px-4 py-2"
+    variant="secondary"
     on:click={startAnotherStream}
     style="display: none;">Start Another Stream</Button
+  >
+  <Button
+    id="goToVideoPageButton"
+    on:click={() => navigate(`/video/${lastVideoId}`)}
+    style="display: none;">Go to Video Page</Button
   >
 
   <video

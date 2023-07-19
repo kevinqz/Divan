@@ -5,7 +5,7 @@
 
   import WebcamDois from "./lib/Webcam.svelte";
   import VideoList from "./lib/VideoList.svelte";
-  import Config from "./lib/Config.svelte";
+  import Settings from "./lib/Settings.svelte";
   import MenuBar from "./lib/MenuBar.svelte";
   import { onMount } from "svelte";
 
@@ -43,9 +43,9 @@
 
     <Router>
       <Route path="/" component={WebcamDois} />
-      <Route path="/config" component={Config} />
+      <Route path="/settings" component={Settings} />
       <Route path="/video/:id" let:params>
-        <VideoPage id={params.id} key={params.id} />
+        <VideoPage id={params.id} />
       </Route>
     </Router>
   </div>

@@ -143,11 +143,11 @@
   transition:fly={{ x: -300, duration: 300 }}
 >
   {#each Object.keys(videos) as day (day)}
-    <div class="flex justify-between items-center m-4">
-      <h4
-        class="scroll-m-20 text-xl font-semibold tracking-tight text-left"
-        on:click={() => selectDay(day)}
-      >
+    <div
+      class="flex justify-between items-center m-3 p-2 hover:m-3 hover:border-b cursor-pointer"
+      on:click={() => selectDay(day)}
+    >
+      <h4 class="scroll-m-20 text-md font-semibold tracking-tight text-left">
         {day}
       </h4>
       <span>{videos[day].length} videos</span>
@@ -156,7 +156,10 @@
       {#each flattenedVideos
         .filter((v) => v.day === day)
         .sort((a, b) => b.id - a.id) as item (item.id)}
-        <Card class="mb-4" on:click={() => goToVideoPage(item.id)}>
+        <Card
+          class="mb-4 cursor-pointer"
+          on:click={() => goToVideoPage(item.id)}
+        >
           <CardHeader>
             <CardTitle>Video {item.id + 1}</CardTitle>
             <CardDescription>
