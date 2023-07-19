@@ -119,48 +119,86 @@
       return groups;
     }, {});
   }
+
+  let selectedDay = null;
+
+  function selectDay(day) {
+    selectedDay = selectedDay === day ? null : day;
+  }
+  import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+  } from "./components/ui/card";
+  import { Button } from "./components/ui/button";
 </script>
 
 <aside
   id="videoList"
-  class="mt-4 bg-surface-300 align-center px-4"
-  style="width: 340px; height: calc(100vh - 50px); position: fixed; left: 0; top: 44px; overflow-y: auto; display: block; z-index: 9999;"
+  class="mt-3 bg-background align-center px-4 border-r"
+  style="width: 340px; height: calc(100vh - 50px); position: fixed; left: 0; top: 44px; overflow-y: auto; display: block; z-index: 9995;"
   transition:fly={{ x: -300, duration: 300 }}
 >
   {#each Object.keys(videos) as day (day)}
-    <h2 class="m-4">{day}</h2>
-    {#each flattenedVideos
-      .filter((v) => v.day === day)
-      .sort((a, b) => b.id - a.id) as item (item.id)}
-      <div class="bg-tertiary-900 p-2 my-2 rounded-md position-relative">
-        <h3 class="mt-1" on:click={() => goToVideoPage(item.id)}>
-          Video {item.id + 1}
-        </h3>
-        <p>
-          {new Intl.DateTimeFormat("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }).format(new Date(item.video.timestamp))}
-          (Duration: {formatTime(item.video.duration)})
-        </p>
-        <video
-          class="mt-1 rounded-sm mb-2"
-          src={URL.createObjectURL(item.video.blob)}
-          controls
-          width="320"
-          height="240"
-        />
-        <button class="text-zync-500" on:click={() => downloadVideo(item.video)}
-          >Download</button
-        >
-        <button
-          on:click={() => deleteVideo(item.video.timestamp)}
-          class="text-red-800 font-medium"
-          style="position: block; right: 10px; top: 10px;"
-        >
-          Remove
-        </button>
-      </div>
-    {/each}
+    <div class="flex justify-between items-center m-4">
+      <h4
+        class="scroll-m-20 text-xl font-semibold tracking-tight text-left"
+        on:click={() => selectDay(day)}
+      >
+        {day}
+      </h4>
+      <span>{videos[day].length} videos</span>
+    </div>
+    {#if day === selectedDay}
+      {#each flattenedVideos
+        .filter((v) => v.day === day)
+        .sort((a, b) => b.id - a.id) as item (item.id)}
+        <Card class="mb-4" on:click={() => goToVideoPage(item.id)}>
+          <CardHeader>
+            <CardTitle>Video {item.id + 1}</CardTitle>
+            <CardDescription>
+              {new Intl.DateTimeFormat("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }).format(new Date(item.video.timestamp))}
+              (Duration: {formatTime(item.video.duration)})
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <video
+              class="mt-1 rounded-sm"
+              src={URL.createObjectURL(item.video.blob)}
+              controls
+              width="320"
+              height="240"
+            />
+          </CardContent>
+          <CardFooter style="display: flex;">
+            <Button
+              style="flex: 1;"
+              on:click={(event) => {
+                event.stopPropagation();
+                downloadVideo(item.video);
+              }}
+            >
+              Download
+            </Button>
+            <Button
+              style="flex: 1;"
+              class="text-red-800 font-medium ml-2"
+              on:click={(event) => {
+                event.stopPropagation();
+                deleteVideo(item.video.timestamp);
+              }}
+            >
+              Remove
+            </Button>
+          </CardFooter>
+        </Card>
+      {/each}
+    {/if}
   {/each}
 </aside>

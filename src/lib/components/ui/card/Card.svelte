@@ -1,15 +1,21 @@
 <script lang="ts">
-	import { AlertDialog as AlertDialogPrimitive } from "radix-svelte";
 	import { cn } from "../../../../lib/utils";
 
 	let className: string | undefined | null = undefined;
 	export { className as class };
 </script>
 
-<AlertDialogPrimitive.Overlay
+<div
 	class={cn(
-		"fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-opacity animate-in fade-in",
+		"rounded-lg border bg-card text-card-foreground shadow-sm",
 		className
 	)}
 	{...$$restProps}
-/>
+	on:click
+	on:focusin
+	on:focusout
+	on:mouseenter
+	on:mouseleave
+>
+	<slot />
+</div>

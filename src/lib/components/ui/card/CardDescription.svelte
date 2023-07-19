@@ -5,9 +5,6 @@
 	export { className as class };
 </script>
 
-<div
-	class={cn("flex flex-col space-y-2 text-center sm:text-left", className)}
-	{...$$restProps}
->
+<p class={cn("text-sm text-muted-foreground", className)} {...$$restProps}>
 	<slot />
-</div>
+</p>
