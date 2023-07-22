@@ -121,45 +121,32 @@
   }
 </script>
 
-<section class="align-middle p-4 mt-28">
+<section class="align-middle p-4 mt-28 flex flex-col items-center">
   {#if video}
     <h1 class="text-3xl text-foreground my-2">Video {Number(id) + 1}</h1>
     <p class="text-md text-foreground">{formatDate(video.timestamp)}</p>
-    <video
-      class="mx-auto my-4 mb-2 rounded-sm w-1/2"
-      src={URL.createObjectURL(video.blob)}
-      autoplay={true}
-      muted={true}
-      controls
-      width="640"
-      height="480"
-    />
-    <!-- <audio
-      class="mx-auto my-4 rounded-sm"
-      src={URL.createObjectURL(video.audioBlob)}
-      autoplay={false}
-      controls
-    /> -->
+    <div class="video-container full-width-on-mobile my-4 mb-2 rounded-sm">
+      <video
+        src={URL.createObjectURL(video.blob)}
+        autoplay={true}
+        muted={true}
+        controls
+        width="100%"
+        height="auto"
+      />
+    </div>
     <form
-      class="my-3"
+      class="my-3 align-middle full-width-on-mobile"
       method="POST"
       on:submit|preventDefault={handleTranscription}
     >
       <!-- Transcribe -->
       {#if isLoading}
-        <Button
-          variant="outline"
-          disabled
-          class="w-1/2"
-        >
+        <Button variant="outline" disabled class="w-full">
           Transcribing...
         </Button>
       {:else}
-        <Button
-          variant="outline"
-          type="submit"
-          class="w-1/2"
-        >
+        <Button variant="outline" type="submit" class="w-full">
           Transcribe
         </Button>
       {/if}
@@ -167,7 +154,7 @@
 
     <!-- Text -->
     <section
-      class="p-5 text-background bg-foreground w-1/2 rounded-md align-middle text-left mx-auto"
+      class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
     >
       {video.transcription || "No transcription available"}
     </section>
@@ -175,3 +162,22 @@
     <p>Select a video.</p>
   {/if}
 </section>
+
+<style>
+  .full-width-on-mobile {
+    width: 100%;
+    max-width: 92%;
+  }
+
+  @media (min-width: 768px) {
+    .full-width-on-mobile {
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    #transcribeButton {
+      width: 100%;
+    }
+  }
+</style>

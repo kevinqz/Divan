@@ -55,7 +55,6 @@
   :root {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    --video-list-width: 340px;
   }
 
   main {
@@ -65,17 +64,9 @@
     margin: 0 auto;
   }
 
-  #videoList {
-    width: var(--video-list-width);
-  }
-
   #main-content {
     flex-grow: 1;
     transition: margin-left 0.3s ease-out;
-  }
-
-  .video-list-open {
-    margin-left: var(--video-list-width);
   }
 
   img {
@@ -106,6 +97,29 @@
 
     p {
       max-width: none;
+    }
+  }
+
+  :root {
+    --video-list-width: 340px;
+    --video-list-width-mobile: 100%;
+  }
+
+  #videoList {
+    width: var(--video-list-width);
+  }
+
+  @media (max-width: 768px) {
+    #videoList {
+      width: var(--video-list-width-mobile);
+    }
+
+    .video-list-open {
+      margin-left: 0;
+    }
+
+    #main-content.video-list-open {
+      margin-left: 0;
     }
   }
 </style>
