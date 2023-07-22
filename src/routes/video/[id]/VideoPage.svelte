@@ -1,10 +1,14 @@
-<script>
+<script lang="ts">
   import { Button } from "../../../lib/components/ui/button";
-
   import { whisperAPIKey } from "../../../lib/stores/configStore.js";
+  import { recordedVideos } from "../../../lib/stores/store.js";
+  import { transcribeAudioWithWhisperApi } from "../../../lib/transcribeAudioWithWhisperApi.ts";
+  import { promptTextWithChatGPT } from "../../../lib/promptTextWithChatGPT.ts";
+  import { onMount } from "svelte";
+
+  import { OpenAI } from "langchain/llms/openai";
 
   let db;
-
   let openRequest = indexedDB.open("videoDatabase", 1);
 
   openRequest.onupgradeneeded = function () {
@@ -22,58 +26,62 @@
     console.error("Error", openRequest.error);
   };
 
-  import { recordedVideos } from "../../../lib/stores/store.js";
-  import { transcribeAudioWithWhisperApi } from "../../../lib/transcribeAudioWithWhisperApi.ts";
-
   export let id;
-
   let isLoading = false;
   let transcribedText = "";
-  import { onMount } from "svelte";
+  let promptedText = "";
 
   let reversedId;
   let video;
 
+  let previousId;
+
   onMount(() => {
     reversedId = $recordedVideos.length - id - 1;
     video = $recordedVideos[reversedId];
+    transcribedText = video.transcription;
+    promptedText = video.promptInput || ""; // retrieve the promptedText
+    // prompt_answer = video.promptResult || ""; // retrieve the prompt_result
+    prompt_answer = video.promptResult || "";
   });
-
-  let previousId;
 
   $: {
     if (id !== undefined && id !== previousId) {
       reversedId = $recordedVideos.length - id - 1;
       video = $recordedVideos[reversedId];
       previousId = id;
+      transcribedText = video.transcription;
+      promptedText = video.promptInput || ""; // retrieve the promptedText
+      prompt_answer = video.promptResult || ""; // retrieve the prompt_result
     }
   }
 
-  function updateVideo(reversedId, transcribedText) {
+  let prompt_answer = "";
+
+  function updateVideoTranscription(reversedId, transcribedText) {
     return new Promise((resolve, reject) => {
       let tx = db.transaction("videos", "readwrite");
       let store = tx.objectStore("videos");
-      let videoTimestamp = $recordedVideos[reversedId].timestamp; // Get the timestamp of the video
+      let videoTimestamp = $recordedVideos[reversedId].timestamp;
       let getRequest = store.get(videoTimestamp);
 
       getRequest.onsuccess = function () {
-        let video = getRequest.result; // Get the video object from the request result
+        let video = getRequest.result;
         if (!video) {
           reject("Video not found");
           return;
         }
-        video.transcription = transcribedText; // Update the transcription
+        video.transcription = transcribedText;
 
-        let putRequest = store.put(video); // Put the updated video back into the store
+        let putRequest = store.put(video);
         putRequest.onsuccess = function () {
           console.log("Video updated successfully");
 
-          // Also update the video in the Svelte store
           let updatedVideos = [...$recordedVideos];
-          updatedVideos[reversedId] = video; // Use reversedId here
+          updatedVideos[reversedId] = video;
           recordedVideos.set(updatedVideos);
 
-          resolve(video); // resolve the Promise with the updated video
+          resolve(video);
         };
         putRequest.onerror = function () {
           console.error("Error", putRequest.error);
@@ -88,27 +96,105 @@
     });
   }
 
+  // Refactor the update functions into a more generalized function
+  function updateVideo(reversedId, updateData) {
+    return new Promise((resolve, reject) => {
+      let tx = db.transaction("videos", "readwrite");
+      let store = tx.objectStore("videos");
+      let videoTimestamp = $recordedVideos[reversedId].timestamp;
+      let getRequest = store.get(videoTimestamp);
+
+      getRequest.onsuccess = function () {
+        let video = getRequest.result;
+        if (!video) {
+          reject("Video not found");
+          return;
+        }
+        // Update the video object with the new data
+        video = { ...video, ...updateData };
+
+        let putRequest = store.put(video);
+        putRequest.onsuccess = function () {
+          console.log("Video updated successfully");
+
+          let updatedVideos = [...$recordedVideos];
+          updatedVideos[reversedId] = video;
+          recordedVideos.set(updatedVideos);
+
+          resolve(video);
+        };
+        putRequest.onerror = function () {
+          console.error("Error", putRequest.error);
+          reject(putRequest.error);
+        };
+      };
+
+      getRequest.onerror = function () {
+        console.error("Error", getRequest.error);
+        reject(getRequest.error);
+      };
+    });
+  }
+
+  // Modify the handleTranscription function to store the transcript text
   const handleTranscription = async (event) => {
-    // Prevent the form from submitting and reloading the page
     event.preventDefault();
-
     isLoading = true;
-
     let WHISPER_API_KEY = $whisperAPIKey; // from the store
     try {
       transcribedText = await transcribeAudioWithWhisperApi(
         video.audioBlob,
         WHISPER_API_KEY
       );
-      video = await updateVideo(reversedId, transcribedText); // Wait for updateVideo to complete and get the updated video
-
-      return transcribedText;
+      video = await updateVideo(reversedId, { transcription: transcribedText }); // Wait for updateVideo to complete and get the updated video
     } catch (error) {
       console.error("Error transcribing audio:", error);
     } finally {
       isLoading = false;
     }
   };
+
+  // Modify the handlePrompting function to store both the prompted text and the prompt results
+  async function handlePrompting(event) {
+    event.preventDefault();
+    isLoading = true;
+    video.promptResult = "";
+
+    try {
+      promptedText = await promptTextWithChatGPT(
+        "English",
+        "Portuguese-BR",
+        transcribedText
+      );
+      let WHISPER_API_KEY = $whisperAPIKey;
+      const model = new OpenAI({
+        openAIApiKey: WHISPER_API_KEY,
+        maxTokens: 250,
+        streaming: true,
+      });
+
+      prompt_answer = "";
+      const response = await model.call(promptedText, {
+        callbacks: [
+          {
+            handleLLMNewToken(token: string) {
+              console.log({ token });
+              prompt_answer = prompt_answer + token;
+            },
+          },
+        ],
+      });
+
+      video = await updateVideo(reversedId, {
+        promptInput: promptedText,
+        promptResult: prompt_answer,
+      });
+    } catch (error) {
+      console.error("Error prompting text:", error);
+    } finally {
+      isLoading = false;
+    }
+  }
 
   function formatDate(timestamp) {
     let date = new Date(timestamp);
@@ -121,63 +207,140 @@
   }
 </script>
 
-<section class="align-middle p-4 mt-28 flex flex-col items-center">
-  {#if video}
-    <h1 class="text-3xl text-foreground my-2">Video {Number(id) + 1}</h1>
-    <p class="text-md text-foreground">{formatDate(video.timestamp)}</p>
-    <div class="video-container full-width-on-mobile my-4 mb-2 rounded-sm">
-      <video
-        src={URL.createObjectURL(video.blob)}
-        autoplay={true}
-        muted={true}
-        controls
-        width="100%"
-        height="auto"
-      />
-    </div>
-    <form
-      class="my-3 align-middle full-width-on-mobile"
-      method="POST"
-      on:submit|preventDefault={handleTranscription}
-    >
-      <!-- Transcribe -->
-      {#if isLoading}
-        <Button variant="outline" disabled class="w-full">
-          Transcribing...
-        </Button>
-      {:else}
-        <Button variant="outline" type="submit" class="w-full">
-          Transcribe
-        </Button>
-      {/if}
-    </form>
+<section class="main-container mt-14">
+  <div class="video-section ml-48">
+    {#if video}
+      <h1 class="text-3xl text-foreground my-2">Video {Number(id) + 1}</h1>
+      <p class="text-md text-foreground">{formatDate(video.timestamp)}</p>
+      <div class="video-container full-width-on-mobile my-4 mb-2 rounded-sm">
+        <video
+          src={URL.createObjectURL(video.blob)}
+          autoplay={true}
+          muted={true}
+          controls
+          width="100%"
+          height="auto"
+        />
+      </div>
+      <form
+        class="my-3 align-middle full-width-on-mobile"
+        method="POST"
+        on:submit|preventDefault={handleTranscription}
+      >
+        <!-- Transcribe -->
+        {#if isLoading}
+          <Button variant="outline" disabled class="w-full">
+            Transcribing...
+          </Button>
+        {:else}
+          <Button variant="outline" type="submit" class="w-full">
+            Transcribe
+          </Button>
+        {/if}
+      </form>
 
-    <!-- Text -->
-    <section
-      class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
-    >
-      {video.transcription || "No transcription available"}
-    </section>
-  {:else}
-    <p>Select a video.</p>
+      {#if video.transcription}
+        <!-- Text -->
+        <section
+          class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
+        >
+          {video.transcription || "No transcription available"}
+        </section>
+        <form
+          class="my-3 align-middle full-width-on-mobile"
+          method="POST"
+          on:submit|preventDefault={handlePrompting}
+        >
+          <!-- Prompt -->
+          {#if isLoading}
+            <Button variant="outline" disabled class="w-full">
+              Prompting...
+            </Button>
+          {:else}
+            <Button variant="outline" type="submit" class="w-full"
+              >Prompt</Button
+            >
+          {/if}
+        </form>
+      {/if}
+    {:else}
+      <p>Select a video.</p>
+    {/if}
+  </div>
+
+  {#if prompt_answer !== "" || (video.promptResult && video.promptResult !== "") || promptedText}
+    <div class="prompt-results-section">
+      <h2 class="text-3xl text-foreground my-2">Prompt Input</h2>
+
+      <!-- Text -->
+      <section
+        class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
+      >
+        {promptedText || "No prompt input available"}
+      </section>
+      <h2 class="text-3xl text-foreground my-2">Prompt Output</h2>
+      <!-- Text -->
+      <section
+        class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
+      >
+        {video.promptResult || prompt_answer || " "}
+      </section>
+      <!-- <h2 class="text-3xl text-foreground my-2">Prompt Results</h2> -->
+      <!-- Text -->
+
+      <!-- <section
+        class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
+      >
+        {#if !prompt_answer || prompt_answer === ""}
+          {prompt_answer || "No prompt answer available"}
+        {:else}
+          {video.promptResult}
+        {/if}
+      </section>  -->
+    </div>
   {/if}
+  {#if video.promptedText}{/if}
 </section>
 
 <style>
-  .full-width-on-mobile {
-    width: 100%;
-    max-width: 92%;
+  .main-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
   }
 
-  @media (min-width: 768px) {
-    .full-width-on-mobile {
-      max-width: 100%;
-    }
+  .video-section,
+  .prompt-results-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .video-section {
+    margin-right: 0px;
+    margin-left: 48px;
+  }
+
+  .prompt-results-section {
+    margin-left: 20px;
+  }
+
+  .full-width-on-mobile {
+    width: 100%;
+    max-width: 80%;
   }
 
   @media (max-width: 768px) {
-    #transcribeButton {
-      width: 100%;
+    .video-section {
+      margin-right: 0px;
+      margin-left: 0px;
+    }
+    .prompt-results-section {
+      margin-left: 0px;
+    }
+    .full-width-on-mobile {
+      max-width: 100%;
     }
   }
 </style>

@@ -157,13 +157,13 @@
         .filter((v) => v.day === day)
         .sort((a, b) => b.id - a.id) as item (item.id)}
         <Card
-          class="mb-4 cursor-pointer"
+          class="mb-2 cursor-pointer"
           on:click={() => goToVideoPage(item.id)}
         >
           <CardHeader>
             <CardTitle>Video {item.id + 1}</CardTitle>
             <CardDescription>
-              {new Intl.DateTimeFormat("en-GB", {
+              Recorded at: {new Intl.DateTimeFormat("en-GB", {
                 hour: "2-digit",
                 minute: "2-digit",
               }).format(new Date(item.video.timestamp))}
@@ -172,7 +172,7 @@
           </CardHeader>
           <CardContent>
             <video
-              class="mt-1 rounded-sm"
+              class="rounded-sm"
               src={URL.createObjectURL(item.video.blob)}
               controls
               width="320"
@@ -205,3 +205,14 @@
     {/if}
   {/each}
 </aside>
+
+<style>
+  #videoList::-webkit-scrollbar {
+    display: none;
+  }
+
+  #videoList {
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+</style>
