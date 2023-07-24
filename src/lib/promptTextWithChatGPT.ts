@@ -8,7 +8,7 @@ import {
 
 
 async function promptTextWithChatGPT(input_language, output_language, text) {
-  const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
+  const template = "You are a helpful assistant that translates {input_language} to {output_language}. This is what you have to translate: ";
   const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
   const humanTemplate = "{text}";
   const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(humanTemplate);

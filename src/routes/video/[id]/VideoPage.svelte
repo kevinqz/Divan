@@ -1,11 +1,13 @@
 <script lang="ts">
+  import { writable } from "svelte/store";
   import { Button } from "../../../lib/components/ui/button";
   import { whisperAPIKey } from "../../../lib/stores/configStore.js";
   import { recordedVideos } from "../../../lib/stores/store.js";
   import { transcribeAudioWithWhisperApi } from "../../../lib/transcribeAudioWithWhisperApi.ts";
-  import { promptTextWithChatGPT } from "../../../lib/promptTextWithChatGPT.ts";
   import { onMount } from "svelte";
+  import PromptingComponent from "../../../lib/PromptingComponent.svelte";
 
+  import { promptTextWithChatGPT } from "../../../lib/promptTextWithChatGPT.ts";
   import { OpenAI } from "langchain/llms/openai";
 
   let db;
@@ -40,8 +42,7 @@
     reversedId = $recordedVideos.length - id - 1;
     video = $recordedVideos[reversedId];
     transcribedText = video.transcription;
-    promptedText = video.promptInput || ""; // retrieve the promptedText
-    // prompt_answer = video.promptResult || ""; // retrieve the prompt_result
+    promptedText = video.promptInput || "";
     prompt_answer = video.promptResult || "";
   });
 
@@ -51,12 +52,17 @@
       video = $recordedVideos[reversedId];
       previousId = id;
       transcribedText = video.transcription;
-      promptedText = video.promptInput || ""; // retrieve the promptedText
-      prompt_answer = video.promptResult || ""; // retrieve the prompt_result
+      promptedText = video.promptInput || "";
+      prompt_answer = video.promptResult || "";
     }
   }
 
   let prompt_answer = "";
+  let openPromptComponent = writable(false); // Convert to Svelte store
+
+  function togglePromptingComponent() {
+    openPromptComponent.update((value) => !value); // Toggle store value
+  }
 
   function updateVideoTranscription(reversedId, transcribedText) {
     return new Promise((resolve, reject) => {
@@ -154,47 +160,52 @@
     }
   };
 
-  // Modify the handlePrompting function to store both the prompted text and the prompt results
-  async function handlePrompting(event) {
+  function handlePrompting(event) {
     event.preventDefault();
-    isLoading = true;
-    video.promptResult = "";
-
-    try {
-      promptedText = await promptTextWithChatGPT(
-        "English",
-        "Portuguese-BR",
-        transcribedText
-      );
-      let WHISPER_API_KEY = $whisperAPIKey;
-      const model = new OpenAI({
-        openAIApiKey: WHISPER_API_KEY,
-        maxTokens: 250,
-        streaming: true,
-      });
-
-      prompt_answer = "";
-      const response = await model.call(promptedText, {
-        callbacks: [
-          {
-            handleLLMNewToken(token: string) {
-              console.log({ token });
-              prompt_answer = prompt_answer + token;
-            },
-          },
-        ],
-      });
-
-      video = await updateVideo(reversedId, {
-        promptInput: promptedText,
-        promptResult: prompt_answer,
-      });
-    } catch (error) {
-      console.error("Error prompting text:", error);
-    } finally {
-      isLoading = false;
-    }
+    togglePromptingComponent();
   }
+
+  // Modify the handlePrompting function to store both the prompted text and the prompt results
+  // async function handlePrompting(event) {
+  //   event.preventDefault();
+  //   isLoading = true;
+  //   video.promptResult = "";
+
+  //   try {
+  //     promptedText = await promptTextWithChatGPT(
+  //       "English",
+  //       "Portuguese-BR",
+  //       transcribedText
+  //     );
+  //     let WHISPER_API_KEY = $whisperAPIKey;
+  //     const model = new OpenAI({
+  //       openAIApiKey: WHISPER_API_KEY,
+  //       maxTokens: 250,
+  //       streaming: true,
+  //     });
+
+  //     prompt_answer = "";
+  //     const response = await model.call(promptedText, {
+  //       callbacks: [
+  //         {
+  //           handleLLMNewToken(token: string) {
+  //             console.log({ token });
+  //             prompt_answer = prompt_answer + token;
+  //           },
+  //         },
+  //       ],
+  //     });
+
+  //     video = await updateVideo(reversedId, {
+  //       promptInput: promptedText,
+  //       promptResult: prompt_answer,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error prompting text:", error);
+  //   } finally {
+  //     isLoading = false;
+  //   }
+  // }
 
   function formatDate(timestamp) {
     let date = new Date(timestamp);
@@ -205,14 +216,27 @@
       date.getMinutes() < 10 ? "0" : ""
     }${date.getMinutes()}`;
   }
+
+  let copyStatus = writable({});
+  function copyToClipboard(id, text) {
+    navigator.clipboard.writeText(text.trim());
+    copyStatus.update((s) => ({ ...s, [id]: true }));
+    setTimeout(() => {
+      copyStatus.update((s) => ({ ...s, [id]: false }));
+    }, 2000);
+  }
 </script>
 
-<section class="main-container mt-14">
-  <div class="video-section ml-48">
-    {#if video}
+<!-- the rest of your script remains unchanged -->
+
+<section class="main-container">
+  {#if video}
+    <div class="video-section">
       <h1 class="text-3xl text-foreground my-2">Video {Number(id) + 1}</h1>
       <p class="text-md text-foreground">{formatDate(video.timestamp)}</p>
-      <div class="video-container full-width-on-mobile my-4 mb-2 rounded-sm">
+      <div
+        class="video-container full-width-on-mobile my-4 mb-2 rounded-sm align-middle"
+      >
         <video
           src={URL.createObjectURL(video.blob)}
           autoplay={true}
@@ -239,108 +263,122 @@
         {/if}
       </form>
 
-      {#if video.transcription}
+      {#if video.transcription && video.transcription.trim() !== ""}
         <!-- Text -->
         <section
           class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
         >
-          {video.transcription || "No transcription available"}
-        </section>
-        <form
-          class="my-3 align-middle full-width-on-mobile"
-          method="POST"
-          on:submit|preventDefault={handlePrompting}
-        >
-          <!-- Prompt -->
-          {#if isLoading}
-            <Button variant="outline" disabled class="w-full">
-              Prompting...
-            </Button>
-          {:else}
-            <Button variant="outline" type="submit" class="w-full"
-              >Prompt</Button
+          <div class="transcript-output">
+            {video.transcription || "No transcription available"}
+          </div>
+          <div class="right-align">
+            <Button
+              variant="outline"
+              type="button"
+              on:click={() =>
+                copyToClipboard("transcription", video.transcription)}
+              class="copy-button"
             >
-          {/if}
+              {#if $copyStatus["transcription"]}
+                Copied!
+              {:else}
+                Copy to clipboard
+              {/if}
+            </Button>
+          </div>
+        </section>
+
+        <form class="my-3 align-middle full-width-on-mobile">
+          <Button
+    variant="outline"
+    type="button"
+    class="w-full"
+    on:click={togglePromptingComponent}
+>
+    {#if $openPromptComponent} Close Prompting Component {:else} Open Prompting Component {/if}
+</Button>
+
         </form>
       {/if}
-    {:else}
-      <p>Select a video.</p>
-    {/if}
-  </div>
-
-  {#if prompt_answer !== "" || (video.promptResult && video.promptResult !== "") || promptedText}
-    <div class="prompt-results-section">
-      <h2 class="text-3xl text-foreground my-2">Prompt Input</h2>
-
-      <!-- Text -->
-      <section
-        class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
-      >
-        {promptedText || "No prompt input available"}
-      </section>
-      <h2 class="text-3xl text-foreground my-2">Prompt Output</h2>
-      <!-- Text -->
-      <section
-        class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
-      >
-        {video.promptResult || prompt_answer || " "}
-      </section>
-      <!-- <h2 class="text-3xl text-foreground my-2">Prompt Results</h2> -->
-      <!-- Text -->
-
-      <!-- <section
-        class="transcription-container full-width-on-mobile p-5 text-background bg-foreground rounded-md align-middle text-left"
-      >
-        {#if !prompt_answer || prompt_answer === ""}
-          {prompt_answer || "No prompt answer available"}
-        {:else}
-          {video.promptResult}
-        {/if}
-      </section>  -->
     </div>
+
+    {#if $openPromptComponent}
+      <div class="prompting-section">
+        <PromptingComponent {video} {promptedText} {prompt_answer} />
+      </div>
+    {/if}
   {/if}
-  {#if video.promptedText}{/if}
 </section>
 
+<!-- the rest of your code remains unchanged -->
 <style>
   .main-container {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
+    height: calc(100vh - 50px); /* Subtract the height of the menubar */
+    overflow: hidden;
   }
 
   .video-section,
-  .prompt-results-section {
-    flex: 1;
+  .prompting-section {
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex: 1;
+    max-height: 100%; /* Add this line */
+    overflow-y: auto; /* Add this line */
+    padding-top: 50px;
   }
 
-  .video-section {
-    margin-right: 0px;
-    margin-left: 48px;
+  .video-section::-webkit-scrollbar,
+  .prompting-section::-webkit-scrollbar {
+    display: none;
   }
 
-  .prompt-results-section {
-    margin-left: 20px;
+  .video-section,
+  .prompting-section {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .full-width-on-mobile {
     width: 100%;
-    max-width: 80%;
+    max-width: 90%;
   }
 
   @media (max-width: 768px) {
-    .video-section {
+    .video-section,
+    .prompting-section {
       margin-right: 0px;
       margin-left: 0px;
     }
-    .prompt-results-section {
-      margin-left: 0px;
+    .main-container {
+      flex-direction: column;
+      height: auto;
     }
     .full-width-on-mobile {
       max-width: 100%;
     }
+  }
+
+  .full-width-button {
+    width: 100%;
+  }
+
+    .copy-button {
+    white-space: nowrap; /* Keep the button text on a single line */
+  }
+
+  .right-align {
+    text-align: right;
+  }
+
+  .transcript-output {
+    white-space: pre-wrap; /* Wrap long words to fit the container */
+    word-wrap: break-word; /* Allow long words to wrap to the next line */
+    max-width: 80%; /* Limit the width of the container */
+    /* overflow-x: auto;  Add horizontal scrolling to the container */
+    margin-bottom: 10px; /* Add some space between the transcript and the button */
   }
 </style>

@@ -233,6 +233,7 @@
 
 <section class="container mx-auto px-4 mt-28">
   <h1 class="text-4xl text-zync-700 font-bold my-4">Conci Room</h1>
+  <h4 class="text-lg text-zync-700 mt-0 mb-8">Video Journalling, Augmented by AI</h4>
   <Button id="startButton" on:click={getStream}>Start Stream</Button>
   <Button
     id="stopButton"
@@ -265,4 +266,5 @@
     autoplay={true}
     bind:this={videoRef}
   />
+  <h4 class="text-md text-zync-700 mt-4">Designed by Kevin Saltarelli</h4>
 </section>
