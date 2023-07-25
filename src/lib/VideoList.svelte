@@ -47,7 +47,7 @@
     recordedVideos.set(updatedVideos);
 
     // Delete from IndexedDB
-    let dbRequest = indexedDB.open("videoDatabase", 1);
+    let dbRequest = indexedDB.open("videoDatabase", 2);
     dbRequest.onsuccess = function () {
       let db = dbRequest.result;
       let transaction = db.transaction("videos", "readwrite");
@@ -64,7 +64,7 @@
 
   // Function to load saved videos from IndexedDB
   async function loadSavedVideos() {
-    let dbRequest = indexedDB.open("videoDatabase", 1);
+    let dbRequest = indexedDB.open("videoDatabase", 2);
     dbRequest.onsuccess = function () {
       let db = dbRequest.result;
       let transaction = db.transaction("videos", "readonly");
@@ -134,6 +134,7 @@
     CardTitle,
   } from "./components/ui/card";
   import { Button } from "./components/ui/button";
+    import { Separator } from "./components/ui/separator";
 </script>
 
 <aside
@@ -204,7 +205,24 @@
       {/each}
     {/if}
   {/each}
-</aside>
+   </aside>
+
+<div class="bg-background pt-6 bg-background align-center px-4 border-r"style="position: fixed; padding-bottom: 20px; bottom: 0; width: 340px; left: 0px; z-index: 9996;" transition:fly={{ x: -300, duration: 300 }}>
+  <div class="space-y-1">
+    <h4 class="text-sm font-medium leading-none">Conci Room</h4>
+    <p class="text-sm text-muted-foreground">
+      Video Journaling, Augmented by AI.
+    </p>
+  </div>
+  <Separator class="my-4 mx-auto align-center" />
+  <div class="flex h-5 items-center space-x-4 text-sm justify-center">
+    <div>Blog</div>
+    <Separator orientation="vertical" />
+    <div>Docs</div>
+    <Separator orientation="vertical" />
+    <div>Source</div>
+  </div>
+</div>
 
 <style>
   #videoList::-webkit-scrollbar {

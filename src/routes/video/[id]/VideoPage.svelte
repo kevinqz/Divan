@@ -11,7 +11,7 @@
   import { OpenAI } from "langchain/llms/openai";
 
   let db;
-  let openRequest = indexedDB.open("videoDatabase", 1);
+  let openRequest = indexedDB.open("videoDatabase", 2); // increase the version number here
 
   openRequest.onupgradeneeded = function () {
     db = openRequest.result;
@@ -153,6 +153,7 @@
         WHISPER_API_KEY
       );
       video = await updateVideo(reversedId, { transcription: transcribedText }); // Wait for updateVideo to complete and get the updated video
+      promptedText = transcribedText; // Update promptedText as well
     } catch (error) {
       console.error("Error transcribing audio:", error);
     } finally {
@@ -290,14 +291,17 @@
 
         <form class="my-3 align-middle full-width-on-mobile">
           <Button
-    variant="outline"
-    type="button"
-    class="w-full"
-    on:click={togglePromptingComponent}
->
-    {#if $openPromptComponent} Close Prompting Component {:else} Open Prompting Component {/if}
-</Button>
-
+            variant="outline"
+            type="button"
+            class="w-full"
+            on:click={togglePromptingComponent}
+          >
+            {#if $openPromptComponent}
+              Close Prompting Component
+            {:else}
+              Open Prompting Component
+            {/if}
+          </Button>
         </form>
       {/if}
     </div>
@@ -366,7 +370,7 @@
     width: 100%;
   }
 
-    .copy-button {
+  .copy-button {
     white-space: nowrap; /* Keep the button text on a single line */
   }
 
