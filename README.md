@@ -2,12 +2,13 @@
 
 > Video Journaling Svelte Toolkit powered by OpenAI's Whisper and ChatGPT API.
 
-[![Build Status](https://github.com/transitive-bullshit/chatgpt-twitter-bot/actions/workflows/test.yml/badge.svg)](https://github.com/transitive-bullshit/chatgpt-twitter-bot/actions/workflows/test.yml) [![MIT License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/transitive-bullshit/chatgpt-twitter-bot/blob/main/license) [![Prettier Code Formatting](https://img.shields.io/badge/code_style-prettier-brightgreen.svg)](https://prettier.io)
-
-[![language](https://img.shields.io/badge/language-batchfile-c1f12e)
+ 
+![language](https://img.shields.io/badge/language-batchfile-c1f12e)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/transitive-bullshit/chatgpt-twitter-bot/blob/main/license)
 ![platform](https://img.shields.io/badge/platform-Windows_7/8/10;_32/64--bit-brightgreen?logo=windows)
+[![version](https://img.shields.io/github/package-json/v/LussacZheng/video-downloader-deploy_info?color=important)]()
 ![GitHub repo size](https://img.shields.io/github/repo-size/LussacZheng/video-downloader-deploy?logo=github)
-![version](https://img.shields.io/github/package-json/v/LussacZheng/video-downloader-deploy_info?color=important)](https://prettier.io)
+[![Prettier Code Formatting](https://img.shields.io/badge/code_style-prettier-brightgreen.svg)](https://prettier.io)
 
 - [Intro](#intro)
 - [Usage](#usage)
@@ -45,7 +46,7 @@ You can save your best Prompts so you can reuse it at any time.
 ## Related
 
 - Powered by [Svelte](https://svelte.dev/), [SvelteKit](https://kit.svelte.dev/), and [Vite](https://vitejs.dev/)
-- Component Library by [@shadcn/svelte](https://www.shadcn-svelte.com/)
+- Component Library by [shadcn-svelte](https://www.shadcn-svelte.com/)
 
 ## License
 
