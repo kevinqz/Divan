@@ -24,7 +24,7 @@
     document.body.appendChild(a);
     a.style = "display: none";
     a.href = blobURL;
-    a.download = `ConciRoom_${video.timestamp}.webm`;
+    a.download = `Divan_${video.timestamp}.webm`;
     a.click();
     // Delay revoking the blobURL to allow the download to start
     setTimeout(function () {

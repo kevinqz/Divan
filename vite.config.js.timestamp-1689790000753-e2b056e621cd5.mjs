@@ -1,6 +1,6 @@
 // vite.config.js
-import { defineConfig } from "file:///home/runner/ConciRoom/node_modules/vite/dist/node/index.js";
-import { svelte } from "file:///home/runner/ConciRoom/node_modules/@sveltejs/vite-plugin-svelte/src/index.js";
+import { defineConfig } from "file:///home/runner/Divan/node_modules/vite/dist/node/index.js";
+import { svelte } from "file:///home/runner/Divan/node_modules/@sveltejs/vite-plugin-svelte/src/index.js";
 var vite_config_default = defineConfig({
   plugins: [svelte()],
   server: {

@@ -191,7 +191,7 @@
     recordedVideos.set([...$recordedVideos, video]); // Push the new video to the store
     saveVideo(video);
 
-    // downloadVideo(blob, `ConciRoom_${timestamp}.webm`);
+    // downloadVideo(blob, `Divan_${timestamp}.webm`);
   }
 
   function updateBadge(recordTime) {
