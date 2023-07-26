@@ -20,6 +20,8 @@
 
 [Conci Room](https://conciroom.kevinqz.repl.co) is a Videou Journaling tool powered by AI. It facilitates video inputs and produce transcriptions and prompt those transcription by using [OpenAI](https://github.com/transitive-bullshit/chatgpt-api) OpenAI's Whisper and ChatGPT API.
 
+Live demo: https://conciroom.kevinqz.repl.co/
+
 ## Usage
 
 Start by inserting your OpenAI API Key in the Settings page.
