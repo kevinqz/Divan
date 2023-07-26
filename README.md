@@ -53,7 +53,7 @@ You can save your best Prompts so you can reuse it at any time.
 MIT © [Kevin Saltarelli](https://kevinsaltarelli.com)
 
 ## Happy Building! 🚀
-If you found this project interesting, please consider [sponsoring me](https://github.com/sponsors/kevinqz) or <a href="https://twitter.com/kevinqz">following me on twitter <img src="https://p-api.fra1.cdn.digitaloceanspaces.com/public_ks/twitter-logo.svg" alt="twitter" height="24px" align="center"></a>
+If you found this project interesting, please consider [sponsoring me](https://github.com/sponsors/kevinqz) or <a href="https://twitter.com/kevinqz">following me on twitter <img src="https://p-api.fra1.digitaloceanspaces.com/public_ks/twitter-logo.svg" alt="twitter" height="24px" align="center"></a>
 
 - Replit [@kevinqz](https://replit.com/@kevinqz)
 - GitHub [@kevinqz](https://github.com/kevinqz)
