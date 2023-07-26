@@ -140,7 +140,7 @@
 <aside
   id="videoList"
   class="mt-3 bg-background align-center px-4 border-r"
-  style="width: 340px; height: calc(100vh - 50px); position: fixed; left: 0; top: 44px; overflow-y: auto; display: block; z-index: 9995;"
+  style="width: 340px; height: calc(100vh - 200px); position: fixed; left: 0; top: 44px; overflow-y: auto; display: block; z-index: 9995;"
   transition:fly={{ x: -300, duration: 300 }}
 >
   {#each Object.keys(videos) as day (day)}
@@ -206,8 +206,7 @@
     {/if}
   {/each}
    </aside>
-
-<div class="bg-background pt-6 bg-background align-center px-4 border-r"style="position: fixed; padding-bottom: 14px; bottom: 0; width: 340px; left: 0px; z-index: 9996;" transition:fly={{ x: -300, duration: 300 }}>
+<div class="bg-background pt-6 bg-background align-center px-4 border-r"style="position: fixed; padding-bottom: 14px; bottom: 0; height: 150px; width: 340px; left: 0px; z-index: 9996;" transition:fly={{ x: -300, duration: 300 }}>
   <div class="space-y-1">
     <h4 class="text-sm font-medium leading-none">Conci Room</h4>
     <p class="text-sm text-muted-foreground">
@@ -226,6 +225,7 @@
     <div>Source</div>
   </div>
 </div>
+
 
 <style>
   #videoList::-webkit-scrollbar {
