@@ -1,4 +1,4 @@
-# Conci Room <!-- omit in toc -->
+# Divan <!-- omit in toc -->
 
 > Video Journaling Svelte Toolkit powered by OpenAI's Whisper and ChatGPT API.
 
@@ -18,7 +18,7 @@
 
 ## Intro
 
-[Conci Room](https://conciroom.kevinqz.repl.co) is a Videou Journaling tool powered by AI. It facilitates video inputs and produce transcriptions and prompt those transcription by using [OpenAI](https://github.com/transitive-bullshit/chatgpt-api) OpenAI's Whisper and ChatGPT API.
+[Divan](https://divan.kevinqz.repl.co) is a Videou Journaling tool powered by AI. It facilitates video inputs and produce transcriptions and prompt those transcription by using [OpenAI](https://github.com/transitive-bullshit/chatgpt-api) OpenAI's Whisper and ChatGPT API.
 
 Live demo: https://conciroom.kevinqz.repl.co/
 
