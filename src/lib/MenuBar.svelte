@@ -1,6 +1,7 @@
 <script>
   export let toggleWebcam;
   export let toggleVideoList;
+  
   import { navigate } from "svelte-routing";
   import { Button } from "./components/ui/button";
 

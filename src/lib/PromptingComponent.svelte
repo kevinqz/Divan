@@ -202,6 +202,76 @@
   }
 }
 
+   // import { Button } from "$components/ui/button";
+  import { Input } from "../lib/components/ui/input";
+  // import { Label } from "$components/ui/label";
+
+  import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger
+  } from "../lib/components/ui/sheet";
+  const SHEET_SIZES = ["sm", "default", "lg", "xl", "full", "content"] as const;
+  type SheetSize = (typeof SHEET_SIZES)[number];
+  let size: SheetSize = "default";
+
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
+  } from "../lib/components/ui/card";
+
+   let savedPrompts = writable(
+    JSON.parse(localStorage.getItem("savedPrompts")) || []
+  );
+
+  // Save the state of the saved prompts to localStorage every time they change
+  $: {
+    localStorage.setItem("savedPrompts", JSON.stringify($savedPrompts));
+  }
+
+  function savePrompt(promptInput) {
+    savedPrompts.update(p => [...p, promptInput]);
+  }
+  
+  function replacePrompt(savedPrompt) {
+    console.log("replacePrompt called with:", savedPrompt);
+    promptInputs.update(inputs => {
+      console.log("Before update: ", inputs);
+      const updatedInputs = inputs.map(input => {
+        if (input.id === savedPrompt.id) {
+          // Only replace the value and preFillTranscription fields
+          return {...input, value: savedPrompt.value, preFillTranscription: savedPrompt.preFillTranscription};
+        } else {
+          return input;
+        }
+      });
+      console.log("After update: ", updatedInputs);
+      return updatedInputs;
+    });
+  }
+
+  function deleteSavedPrompt(savedPrompt) {
+    savedPrompts.update(prompts => prompts.filter(prompt => prompt.id !== savedPrompt.id));
+  }
+
+let activePromptId = null;
+
+function openSheetWithPrompt(id) {
+  activePromptId = id;
+  // open the sheet here
+}
+
+    export let toggleVideoList;
+
 </script>
 
 <div class="prompt-results-section">
@@ -291,7 +361,60 @@
 
               </div>
               <div class="right-align flex items-center justify-between">
-                <div class="flex items-center space-x-4" />
+                <div>
+                  <Button
+  variant="outline"
+  type="button"
+  on:click={() => savePrompt(promptInput)}
+  class="save-button"
+>
+  Save
+</Button>
+                  
+<Sheet>
+                  
+
+    <SheetTrigger>
+    <Button variant="outline" on:click={toggleVideoList} on:click={() => openSheetWithPrompt(promptInput.id)}>Load</Button>
+</SheetTrigger>
+
+   <SheetContent position="right" {size}>
+  <SheetHeader>
+    <SheetTitle>Saved Prompts</SheetTitle>
+  </SheetHeader>
+  {#each $savedPrompts as savedPrompt, index}
+    <Card class="mx-0 my-4 max-height-4">
+      <div on:click|stopPropagation={() => replacePrompt(savedPrompt)}>
+        <CardHeader>
+          <CardTitle>Prompt #{savedPrompt.id}</CardTitle>
+        </CardHeader>
+        <CardContent class="max-height-4 overflow-hidden mr-4">
+          <p>{savedPrompt.value}</p>
+        </CardContent>
+        <CardFooter>
+          <button class="delete-button" on:click|stopPropagation={() => deleteSavedPrompt(savedPrompt)}>Delete</button>
+          <button
+            type="button"
+            on:click|stopPropagation={() => copyToClipboard(savedPrompt.id, savedPrompt.value)}
+            class="delete-button mx-4"
+          >
+            {#if $copyStatus[savedPrompt.id]}
+              Copied!
+            {:else}
+              Copy
+            {/if}
+          </button>
+        </CardFooter>
+      </div>
+    </Card>
+  {/each}
+  <SheetFooter>
+  </SheetFooter>
+</SheetContent>
+
+
+                </Sheet>
+                </div>
 
                 <div>
                   <Button
@@ -480,6 +603,13 @@
   .copy-button {
     white-space: nowrap; /* Keep the button text on a single line */
   }
+                  .save-button {
+    white-space: nowrap; /* Keep the button text on a single line */
+  }
+
+                  .load-button {
+    white-space: nowrap; /* Keep the button text on a single line */
+  }
 
   .right-align {
     text-align: right;
@@ -488,4 +618,15 @@
   .hidden {
     display: none;
   }
+
+                  .sheet-content {
+    max-height: 400px; /* Adjust as needed */
+    overflow-y: auto;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.sheet-content::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+}
+
 </style>
